@@ -69,11 +69,12 @@ public class CommandController {
 
     }
 
-    private void handleTextContent(String replyToken, Event event, TextMessageContent content) throws Exception{
+    private void handleTextContent(String replyToken, MessageEvent<TextMessageContent> event, TextMessageContent content) throws Exception{
         final String text = content.getText();
         log.info("Got text message from replyToken:{}: text:{}", replyToken, text);
         this.reply(replyToken, makeReplyMessage(content.getText()).get());
     }
+
 
 
 
