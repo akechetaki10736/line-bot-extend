@@ -32,21 +32,21 @@ import com.linecorp.bot.spring.boot.annotation.LineMessageHandler;
 @SpringBootApplication
 @LineMessageHandler
 public class EchoApplication {
-    private final Logger log = LoggerFactory.getLogger(EchoApplication.class);
 
+    private final Logger log = LoggerFactory.getLogger(EchoApplication.class);
     public static void main(String[] args) {
         SpringApplication.run(EchoApplication.class, args);
     }
 
-    @EventMapping
-    public Message handleTextMessageEvent(MessageEvent<TextMessageContent> event) {
-        log.info("event: " + event);
-        final String originalMessageText = event.getMessage().getText();
-        return new TextMessage(originalMessageText);
-    }
-
-    @EventMapping
-    public void handleDefaultMessageEvent(Event event) {
-        System.out.println("event: " + event);
-    }
+//    @EventMapping
+//    public Message handleTextMessageEvent(MessageEvent<TextMessageContent> event) {
+//        log.info("event: " + event);
+//        final String originalMessageText = event.getMessage().getText();
+//        return new TextMessage(originalMessageText);
+//    }
+//
+//    @EventMapping
+//    public void handleDefaultMessageEvent(Event event) {
+//        System.out.println("event: " + event);
+//    }
 }

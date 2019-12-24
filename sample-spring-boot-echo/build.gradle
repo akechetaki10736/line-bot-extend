@@ -20,4 +20,5 @@ dependencies {
     implementation project(':line-bot-spring-boot')
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
+    implementation 'com.dropbox.core:dropbox-core-sdk:3.1.3'
 }
