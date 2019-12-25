@@ -18,41 +18,41 @@ import java.util.Map;
 public class CommandAction {
 
     public static Map<String, CommandEnum> commandMap = new HashMap<>();
-
+    public static DbxWebAuth webAuth;
     public enum CommandEnum {
         DROPBOX_LOGIN {
             @Override
-            public Message makeReplyMessage() throws Exception {
+            public Message makeReplyMessage(String userId) throws Exception {
                 ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
                 HttpSession httpSession = attributes.getRequest().getSession(true);
                 DbxAppInfo appInfo = new DbxAppInfo("pinzzhq3gm40hae", "9sebf4s438qk0m1");
                 DbxRequestConfig requestConfig = new DbxRequestConfig("line-bot-dropbox-authorize");
                 webAuth = new DbxWebAuth(requestConfig, appInfo);
                 DbxWebAuth.Request webAuthRequest = DbxWebAuth.newRequestBuilder()
-                        .withRedirectUri("https://493d4a8a.ngrok.io/oauth2callback", new DbxStandardSessionStore(httpSession, "pinzzhq3gm40hae"))
+                        .withRedirectUri("https://114de623.ngrok.io/oauth2callback", new DbxStandardSessionStore(httpSession, "pinzzhq3gm40hae"))
+                        .withState("uid=" + userId)
                         .build();
-
                 return new TextMessage("plz login: \n" + webAuth.authorize(webAuthRequest));
             }
         }, DROPBOX_FILELIST {
             @Override
-            public Message makeReplyMessage() throws Exception {
+            public Message makeReplyMessage(String userId) throws Exception {
                 return new TextMessage("施工中");
             }
         },UNKNOWN_COMMAND{
             @Override
-            public Message makeReplyMessage() throws Exception {
+            public Message makeReplyMessage(String userId) throws Exception {
                 return new TextMessage("跨謀");
             }
         };
 
-        private static DbxWebAuth webAuth;
+
 
         CommandEnum() {
             commandMap.put(this.name().toLowerCase(), this);
         }
 
 
-        public abstract Message makeReplyMessage() throws Exception;
+        public abstract Message makeReplyMessage(String userId) throws Exception;
     }
 }
