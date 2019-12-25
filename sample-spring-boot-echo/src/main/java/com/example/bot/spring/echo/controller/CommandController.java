@@ -88,9 +88,6 @@ public class CommandController {
         this.reply(replyToken, makeReplyMessage(content.getText(), event.getSource().getUserId()).get());
     }
 
-
-
-
     @GetMapping("/oauth2callback")
     public String testAPI(@RequestParam final String code, @RequestParam final String state) throws IOException {
         DbxAuthFinish authFinish;
@@ -109,8 +106,6 @@ public class CommandController {
         log.info("- Account ID: " + authFinish.getAccountId());
         log.info("- Access Token: " + authFinish.getAccessToken());
         userCache.put( userId, authFinish.getAccessToken());
-
-        
 
         return "<html><body><script>window.location=\"" + redirectURI + "\"</script></body></html>";
     }
