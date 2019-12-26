@@ -59,8 +59,9 @@ public class CommandController {
         }
     }
     private Optional<Message> makeReplyMessage( String command, String userId) throws Exception {
-        CommandAction.CommandEnum commandEnum = CommandAction.commandMap.get(command) != null ?
-                CommandAction.commandMap.get(command) : CommandAction.CommandEnum.UNKNOWN_COMMAND;
+        CommandAction.CommandEnum commandEnum =CommandAction.CommandEnum.UNKNOWN_COMMAND;
+        if(CommandAction.commandMap.get(command) != null)
+            commandEnum = CommandAction.commandMap.get(command);
         return Optional.of(commandEnum.makeReplyMessage(userId));
     }
     private void handleTextContent(String replyToken, Event event, TextMessageContent content) throws Exception{
