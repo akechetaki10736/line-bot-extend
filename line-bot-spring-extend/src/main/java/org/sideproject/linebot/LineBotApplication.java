@@ -25,11 +25,11 @@ import com.linecorp.bot.spring.boot.annotation.LineMessageHandler;
 
 @SpringBootApplication
 @LineMessageHandler
-public class LineBotApplilcation {
+public class LineBotApplication {
 
-    private final Logger log = LoggerFactory.getLogger(LineBotApplilcation.class);
+    private final Logger log = LoggerFactory.getLogger(LineBotApplication.class);
     public static void main(String[] args) {
-        SpringApplication.run(LineBotApplilcation.class, args);
+        SpringApplication.run(LineBotApplication.class, args);
     }
 
 //    @EventMapping
