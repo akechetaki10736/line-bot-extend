@@ -1,4 +1,4 @@
-package com.example.bot.spring.echo.service;
+package org.sideproject.linebot.service;
 
 public interface Oauth2Service {
     String getLoginURI(String lineUserId);

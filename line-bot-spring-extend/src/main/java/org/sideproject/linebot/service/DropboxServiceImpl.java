@@ -1,4 +1,4 @@
-package com.example.bot.spring.echo.service;
+package org.sideproject.linebot.service;
 import com.dropbox.core.*;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FolderMetadata;
@@ -6,11 +6,15 @@ import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
 import java.util.*;
+
 
 @Service
 public class DropboxServiceImpl implements Oauth2Service{
@@ -19,19 +23,34 @@ public class DropboxServiceImpl implements Oauth2Service{
     private Map<String, DbxAuthFinish> dpxAccessMap;
     private DbxAppInfo appInfo;
     private DbxRequestConfig requestConfig;
+
+    @Value("${dropbox.config.app-key}")
+    private String dpxAppkey;
+
+    @Value("${dropbox.config.app-secret}")
+    private String dpxAppSecret;
+
+    @Value("${dropbox.config.redirect-uri}")
+    private String redirectURI;
+
     public DropboxServiceImpl( ) {
         this.dpxAuthMap =  new HashMap<>();
         this.dpxAccessMap = new HashMap<>();
-        this.appInfo = new DbxAppInfo("pinzzhq3gm40hae", "9sebf4s438qk0m1");
         this.requestConfig = new DbxRequestConfig("line-bot-dropbox-authorize");
     }
+
+    @PostConstruct
+    private void init() {
+        this.appInfo = new DbxAppInfo(dpxAppkey, dpxAppSecret);
+    }
+
     @Override
     public String getLoginURI(String lineUserId) {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         HttpSession httpSession = attributes.getRequest().getSession(true);
         DbxWebAuth webAuth = new DbxWebAuth(requestConfig, appInfo);
         DbxWebAuth.Request webAuthRequest = DbxWebAuth.newRequestBuilder()
-                .withRedirectUri("https://42ce300e.ngrok.io/oauth2callback", new DbxStandardSessionStore(httpSession, "pinzzhq3gm40hae"))
+                .withRedirectUri(redirectURI, new DbxStandardSessionStore(httpSession, dpxAppkey))
                 .withState("uid=" + lineUserId)
                 .build();
         dpxAuthMap.put(lineUserId, webAuth);
@@ -47,7 +66,7 @@ public class DropboxServiceImpl implements Oauth2Service{
             return;
         }
         try {
-            authFinish = dbxWebAuth.finishFromCode(code, "https://42ce300e.ngrok.io/oauth2callback");
+            authFinish = dbxWebAuth.finishFromCode(code, redirectURI);
         } catch (DbxException ex) {
             System.err.println("Error in DbxWebAuth.authorize: " + ex.getMessage());
             return;

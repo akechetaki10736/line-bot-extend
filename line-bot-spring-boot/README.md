@@ -65,8 +65,8 @@ When webhook is reached, SDK call decide which method should be called based on 
 All methods detected by SDK is logged into start up time as follows.
 
 ```
-c.l.b.s.b.s.LineMessageHandlerSupport    : Mapped "[MessageEvent<TextMessageContent>]" onto public java.util.List<com.linecorp.bot.model.message.TextMessage> com.example.bot.spring.echo.EchoApplication.handleTextMessageEvent(com.linecorp.bot.model.event.MessageEvent<com.linecorp.bot.model.event.message.TextMessageContent>) throws java.lang.Exception
-c.l.b.s.b.s.LineMessageHandlerSupport    : Mapped "[Event]" onto public void com.example.bot.spring.echo.EchoApplication.handleDefaultMessageEvent(com.linecorp.bot.model.event.Event)
+c.l.b.s.b.s.LineMessageHandlerSupport    : Mapped "[MessageEvent<TextMessageContent>]" onto public java.util.List<com.linecorp.bot.model.message.TextMessage> EchoApplication.handleTextMessageEvent(com.linecorp.bot.model.event.MessageEvent<com.linecorp.bot.model.event.message.TextMessageContent>) throws java.lang.Exception
+c.l.b.s.b.s.LineMessageHandlerSupport    : Mapped "[Event]" onto public void EchoApplication.handleDefaultMessageEvent(com.linecorp.bot.model.event.Event)
 ```
 
 ## Configuration

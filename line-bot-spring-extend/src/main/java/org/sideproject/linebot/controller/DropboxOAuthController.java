@@ -1,6 +1,6 @@
-package com.example.bot.spring.echo.controller;
+package org.sideproject.linebot.controller;
 
-import com.example.bot.spring.echo.service.Oauth2Service;
+import org.sideproject.linebot.service.Oauth2Service;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.PushMessage;
 import com.linecorp.bot.model.message.TextMessage;

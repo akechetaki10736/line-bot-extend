@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.example.bot.spring.echo;
+package org.sideproject.linebot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,13 +1,12 @@
-package com.example.bot.spring.echo.command;
+package org.sideproject.linebot.command;
 
-import com.example.bot.spring.echo.service.DropboxServiceImpl;
-import com.example.bot.spring.echo.service.Oauth2Service;
+import org.sideproject.linebot.service.DropboxServiceImpl;
+import org.sideproject.linebot.service.Oauth2Service;
 import com.linecorp.bot.model.message.Message;
 import com.linecorp.bot.model.message.TextMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

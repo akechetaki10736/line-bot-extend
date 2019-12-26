@@ -1,6 +1,6 @@
-package com.example.bot.spring.echo.controller;
+package org.sideproject.linebot.controller;
 
-import com.example.bot.spring.echo.command.CommandAction;
+import org.sideproject.linebot.command.CommandAction;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.ReplyMessage;
 import com.linecorp.bot.model.event.Event;
