@@ -22,4 +22,4 @@ include 'line-bot-cli'
 include 'line-bot-parser'
 
 // samples
-include 'sample-spring-boot-echo'
+include 'line-bot-spring-extend'

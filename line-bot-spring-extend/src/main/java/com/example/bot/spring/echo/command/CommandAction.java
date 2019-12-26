@@ -1,5 +1,6 @@
 package com.example.bot.spring.echo.command;
 
+import com.example.bot.spring.echo.service.DropboxServiceImpl;
 import com.example.bot.spring.echo.service.Oauth2Service;
 import com.linecorp.bot.model.message.Message;
 import com.linecorp.bot.model.message.TextMessage;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -22,7 +24,13 @@ public class CommandAction {
             @Override
             public Message makeReplyMessage(String userId) throws Exception {
                 //dpxapi
-                return new TextMessage("施工中");
+                DropboxServiceImpl imp = (DropboxServiceImpl) oauth2Service;
+                List<String> browseList;
+                if(imp.getFilesList(userId).isPresent())
+                    browseList = imp.getFilesList(userId).get();
+                else
+                    return new TextMessage("Plz login first");
+                return new TextMessage(browseList.get(0) + browseList.get(1));
             }
         }, UNKNOWN_COMMAND {
             @Override
