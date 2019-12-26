@@ -63,8 +63,10 @@ public class CommandController {
         if(command.startsWith("!") || CommandAction.commandMap.get(command) != null)
             commandEnum = CommandAction.commandMap.get(command);
 
+        String[] arr= {"","",""};
+
         List<String> contextArr = new ArrayList<>();
-        contextArr = Arrays.asList(command.split(" "));
+        contextArr.addAll(Arrays.asList(command.split(" ")));
         contextArr.add(0, userId);
 
         return Optional.of(commandEnum.makeReplyMessage(contextArr));

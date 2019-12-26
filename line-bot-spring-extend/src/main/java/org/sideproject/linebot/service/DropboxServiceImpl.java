@@ -20,7 +20,8 @@ import java.util.*;
 public class DropboxServiceImpl implements Oauth2Service{
     private final Logger log = LoggerFactory.getLogger(DropboxServiceImpl.class);
     private Map<String, DbxWebAuth> dpxAuthMap;
-    private Map<String, DbxAuthFinish> dpxAccessMap;
+    private Map<String, DbxClientV2> dpxClientMap;
+    private Map<String, String> dpxUserPWD;
     private DbxAppInfo appInfo;
     private DbxRequestConfig requestConfig;
 
@@ -35,7 +36,8 @@ public class DropboxServiceImpl implements Oauth2Service{
 
     public DropboxServiceImpl( ) {
         this.dpxAuthMap =  new HashMap<>();
-        this.dpxAccessMap = new HashMap<>();
+        this.dpxClientMap = new HashMap<>();
+        this.dpxUserPWD = new HashMap<>();
         this.requestConfig = new DbxRequestConfig("line-bot-dropbox-authorize");
     }
 
@@ -72,23 +74,31 @@ public class DropboxServiceImpl implements Oauth2Service{
             return;
         }
         dpxAuthMap.remove(userId);
-        dpxAccessMap.put(userId, authFinish);
+
+        DbxClientV2 dpxClient = new DbxClientV2(requestConfig, authFinish.getAccessToken());
+        dpxClientMap.put(userId, dpxClient);
+        dpxUserPWD.put(userId, "");
+
         log.info("Authorization complete.");
         log.info("- User ID: " + authFinish.getUserId());
         log.info("- State: " + userId);
         log.info("- Account ID: " + authFinish.getAccountId());
         log.info("- Access Token: " + authFinish.getAccessToken());
     }
+
     public Optional<List<String>> getFilesList(String userId) throws DbxException {
         List<String> ret = null;
-        if(this.dpxAccessMap.get(userId) == null) {
+        if(this.dpxClientMap.get(userId) == null) {
             log.error("User({}) has not yet logged in.", userId);
             return Optional.empty();
         }
-        DbxClientV2 dpxClient = new DbxClientV2(requestConfig, this.dpxAccessMap.get(userId).getAccessToken());
-        ret = new ArrayList<String>(2);
+
+        ret = new ArrayList<String>(3);
+        DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
+
         StringBuilder fileListBuilder = new StringBuilder(), folderListBuilder = new StringBuilder();
-        ListFolderResult result = dpxClient.files().listFolder("");
+        ListFolderResult result = dpxClient.files().listFolder(dpxUserPWD.get(userId));
+        ret.add(0, dpxUserPWD.get(userId));
         while(true) {
             for (Metadata metadata : result.getEntries()) {
                 String mtName = metadata.getName();
@@ -105,8 +115,8 @@ public class DropboxServiceImpl implements Oauth2Service{
                 break;
             result = dpxClient.files().listFolderContinue(result.getCursor());
         }
-        ret.add(0, folderListBuilder.toString());
-        ret.add(1, fileListBuilder.toString());
+        ret.add(1, folderListBuilder.toString());
+        ret.add(2, fileListBuilder.toString());
         return Optional.of(ret);
     }
 }

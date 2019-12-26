@@ -33,7 +33,12 @@ public class CommandAction {
                     browseList = imp.getFilesList(userId).get();
                 else
                     return new TextMessage("Plz login first");
-                return new TextMessage(browseList.get(0) + browseList.get(1));
+
+                StringBuilder text = new StringBuilder();
+                text.append("Your working dir : \"" + browseList.get(0) + "\"\n\n\n");
+                text.append(browseList.get(1));
+                text.append(browseList.get(2));
+                return new TextMessage(text.toString());
             }
         },
         FW {
