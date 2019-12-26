@@ -15,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import static java.util.Collections.singletonList;
 @Slf4j
@@ -58,11 +56,18 @@ public class CommandController {
             throw new RuntimeException(e);
         }
     }
-    private Optional<Message> makeReplyMessage( String command, String userId) throws Exception {
+
+    private Optional<Message> makeReplyMessage(String command, String userId) throws Exception {
         CommandAction.CommandEnum commandEnum =CommandAction.CommandEnum.UNKNOWN_COMMAND;
-        if(CommandAction.commandMap.get(command) != null)
+
+        if(command.startsWith("!") || CommandAction.commandMap.get(command) != null)
             commandEnum = CommandAction.commandMap.get(command);
-        return Optional.of(commandEnum.makeReplyMessage(userId));
+
+        List<String> contextArr = new ArrayList<>();
+        contextArr = Arrays.asList(command.split(" "));
+        contextArr.add(0, userId);
+
+        return Optional.of(commandEnum.makeReplyMessage(contextArr));
     }
     private void handleTextContent(String replyToken, Event event, TextMessageContent content) throws Exception{
         final String text = content.getText();

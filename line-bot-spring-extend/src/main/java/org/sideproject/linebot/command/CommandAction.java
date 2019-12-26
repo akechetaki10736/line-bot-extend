@@ -14,15 +14,19 @@ import java.util.Map;
 @Component
 public class CommandAction {
     public enum CommandEnum {
-        DROPBOX_LOGIN {
+        LOGIN {
             @Override
-            public Message makeReplyMessage(String userId) throws Exception {
+            public Message makeReplyMessage(List<String> context) throws Exception {
+
+                String userId = context.get(0);
                 return new TextMessage(oauth2Service.getLoginURI(userId));
             }
-        }, DROPBOX_FILELIST {
+        },
+        BROWSE {
             @Override
-            public Message makeReplyMessage(String userId) throws Exception {
+            public Message makeReplyMessage(List<String> context) throws Exception {
                 //dpxapi
+                String userId = context.get(0);
                 DropboxServiceImpl imp = (DropboxServiceImpl) oauth2Service;
                 List<String> browseList;
                 if(imp.getFilesList(userId).isPresent())
@@ -31,16 +35,35 @@ public class CommandAction {
                     return new TextMessage("Plz login first");
                 return new TextMessage(browseList.get(0) + browseList.get(1));
             }
-        }, UNKNOWN_COMMAND {
+        },
+        FW {
             @Override
-            public Message makeReplyMessage(String userId) throws Exception {
+            public Message makeReplyMessage(List<String> context) throws Exception {
+                return null;
+            }
+        },
+        BACK {
+            @Override
+            public Message makeReplyMessage(List<String> context) throws Exception {
+                return null;
+            }
+        },
+        DL{
+            @Override
+            public Message makeReplyMessage(List<String> context) throws Exception {
+                return null;
+            }
+        },
+        UNKNOWN_COMMAND {
+            @Override
+            public Message makeReplyMessage(List<String> context) throws Exception {
                 return new TextMessage("跨謀");
             }
         };
         CommandEnum() {
-            commandMap.put(this.name().toLowerCase(), this);
+            commandMap.put("!" + this.name().toLowerCase(), this);
         }
-        public abstract Message makeReplyMessage(String userId) throws Exception;
+        public abstract Message makeReplyMessage(List<String> context) throws Exception;
     }
     private static Oauth2Service oauth2Service;
     @Autowired
