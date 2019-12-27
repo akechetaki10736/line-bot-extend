@@ -65,7 +65,7 @@ public class CommandController {
         List<String> contextArr = new ArrayList<>();
         contextArr.addAll(Arrays.asList(command.split(" ")));
         contextArr.add(0, userId);
-        
+
         if(command.startsWith("!") && CommandAction.commandMap.containsKey(contextArr.get(1)))
             commandEnum = CommandAction.commandMap.get(contextArr.get(1));
 
