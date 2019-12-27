@@ -168,7 +168,6 @@ public class DropboxServiceImpl implements Oauth2Service{
 
         DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
 
-
         StringBuilder targetFilePath = new StringBuilder();
 
         targetFilePath.append(this.dpxUserPWD.get(userId));

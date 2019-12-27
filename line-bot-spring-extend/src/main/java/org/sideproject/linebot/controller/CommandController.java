@@ -1,11 +1,12 @@
 package org.sideproject.linebot.controller;
 
+import com.linecorp.bot.model.event.message.*;
+import com.linecorp.bot.model.message.ImageMessage;
 import org.sideproject.linebot.command.CommandAction;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.ReplyMessage;
 import com.linecorp.bot.model.event.Event;
 import com.linecorp.bot.model.event.MessageEvent;
-import com.linecorp.bot.model.event.message.TextMessageContent;
 import com.linecorp.bot.model.message.Message;
 import com.linecorp.bot.model.response.BotApiResponse;
 import com.linecorp.bot.spring.boot.annotation.EventMapping;
@@ -38,6 +39,27 @@ public class CommandController {
         TextMessageContent message = event.getMessage();
         handleTextContent(event.getReplyToken(), event, message);
     }
+
+    @EventMapping
+    public void handleImageMessageContent(MessageEvent<ImageMessageContent> event) throws Exception{
+        /* TODO */
+    }
+
+    @EventMapping
+    public void handleAudioMessageContent(MessageEvent<AudioMessageContent> event) throws Exception{
+        /* TODO */
+    }
+
+    @EventMapping
+    public void handleVideoMessageContent(MessageEvent<VideoMessageContent> event) throws Exception{
+        /* TODO */
+    }
+
+    @EventMapping
+    public void handleFileMessageContent(MessageEvent<FileMessageContent> event) throws Exception{
+        /* TODO */
+    }
+
     private void reply(@NonNull String replyToken, @NonNull Message message) {
         reply(replyToken, singletonList(message));
     }
@@ -75,5 +97,9 @@ public class CommandController {
         final String text = content.getText();
         log.info("Got text message from replyToken:{}: text:{}", replyToken, text);
         this.reply(replyToken, makeReplyMessage(content.getText(), event.getSource().getUserId()).get());
+    }
+
+    private void handleFilesUpload(String replyToken, Event event, ImageMessageContent content){
+        /* TODO */
     }
 }
