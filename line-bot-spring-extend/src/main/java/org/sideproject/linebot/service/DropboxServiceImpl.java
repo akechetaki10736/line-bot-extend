@@ -59,7 +59,7 @@ public class DropboxServiceImpl implements Oauth2Service{
         return webAuth.authorize(webAuthRequest);
     }
     @Override
-    public void finishOauth(final String code, final String state) {
+    public void finishOauth(final String code, final String state) throws Exception {
         DbxAuthFinish authFinish;
         String userId = state.substring(state.indexOf("uid=")+4);
         DbxWebAuth dbxWebAuth = dpxAuthMap.get(userId);
@@ -84,6 +84,12 @@ public class DropboxServiceImpl implements Oauth2Service{
         log.info("- State: " + userId);
         log.info("- Account ID: " + authFinish.getAccountId());
         log.info("- Access Token: " + authFinish.getAccessToken());
+
+        try {
+            dpxClient.files().createFolderV2("/LineSpace");
+        } catch (DbxException ex) {
+            log.error("Create line folder failed : " + ex.getLocalizedMessage());
+        }
     }
 
     public Optional<List<String>> getFilesList(String userId) throws DbxException {
@@ -118,5 +124,33 @@ public class DropboxServiceImpl implements Oauth2Service{
         ret.add(1, folderListBuilder.toString());
         ret.add(2, fileListBuilder.toString());
         return Optional.of(ret);
+    }
+
+    public Optional<String> getFileLink(String userId, String file) {
+        String result = null;
+
+        if(!this.dpxClientMap.containsKey(userId) || !this.dpxUserPWD.containsKey(userId))
+            return Optional.empty();
+
+        DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("/" + this.dpxUserPWD.get(userId));
+
+        if(!this.dpxUserPWD.get(userId).equals(""))
+            sb.append("/");
+
+        sb.append(file);
+
+        try {
+            result = dpxClient.files().getTemporaryLink(sb.toString()).getLink();
+        } catch (DbxException ex) {
+            log.error(ex.getMessage());
+        }
+
+        if(result == null)
+            return Optional.empty();
+
+        return Optional.of(result);
     }
 }

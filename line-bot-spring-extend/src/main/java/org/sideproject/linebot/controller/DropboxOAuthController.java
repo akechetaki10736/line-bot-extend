@@ -27,7 +27,7 @@ public class DropboxOAuthController {
     private String redirectURI;
 
     @GetMapping("/oauth2callback")
-    public String handleOauthCallback(@RequestParam final String code, @RequestParam final String state) {
+    public String handleOauthCallback(@RequestParam final String code, @RequestParam final String state) throws Exception {
         oauth2service.finishOauth(code, state);
         String userId = state.substring(state.indexOf("uid=")+4);
         PushMessage cmdReminder = new PushMessage(userId, new TextMessage("Auth successful, plz input next command"));

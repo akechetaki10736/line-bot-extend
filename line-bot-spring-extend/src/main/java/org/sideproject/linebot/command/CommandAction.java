@@ -1,5 +1,6 @@
 package org.sideproject.linebot.command;
 
+import org.apache.catalina.User;
 import org.sideproject.linebot.service.DropboxServiceImpl;
 import org.sideproject.linebot.service.Oauth2Service;
 import com.linecorp.bot.model.message.Message;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class CommandAction {
@@ -56,7 +58,21 @@ public class CommandAction {
         DL{
             @Override
             public Message makeReplyMessage(List<String> context) throws Exception {
-                return null;
+                DropboxServiceImpl dropboxServiceImp = (DropboxServiceImpl) oauth2Service;
+
+                StringBuilder fileName = new StringBuilder();
+
+                //this command will be `!dl file_name(accept space)`
+                for(int i = 2; i < context.size(); i++) {
+                    fileName.append(context.get(i));
+                }
+
+                Optional<String> link = dropboxServiceImp.getFileLink(context.get(0), fileName.toString());
+
+                if(link.isPresent())
+                    return new TextMessage(link.get());
+                else
+                    return new TextMessage("Error");
             }
         },
         UNKNOWN_COMMAND {
