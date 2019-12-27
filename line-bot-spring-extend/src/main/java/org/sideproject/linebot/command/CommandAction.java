@@ -7,9 +7,11 @@ import com.linecorp.bot.model.message.TextMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class CommandAction {
@@ -27,10 +29,10 @@ public class CommandAction {
             public Message makeReplyMessage(List<String> context) throws Exception {
                 //dpxapi
                 String userId = context.get(0);
-                DropboxServiceImpl imp = (DropboxServiceImpl) oauth2Service;
+                DropboxServiceImpl dropboxService = (DropboxServiceImpl) oauth2Service;
                 List<String> browseList;
-                if(imp.getFilesList(userId).isPresent())
-                    browseList = imp.getFilesList(userId).get();
+                if(dropboxService.getFilesList(userId).isPresent())
+                    browseList = dropboxService.getFilesList(userId).get();
                 else
                     return new TextMessage("Plz login first");
 
@@ -44,13 +46,45 @@ public class CommandAction {
         FW {
             @Override
             public Message makeReplyMessage(List<String> context) throws Exception {
-                return null;
+                DropboxServiceImpl dropboxService = (DropboxServiceImpl) oauth2Service;
+                String userId = context.get(0);
+                Optional<String> workingDirectory;
+
+                if(context.size() > 3){
+                    StringBuilder folderName = null;
+                    List<String> folderNamePieceList = context.subList(2, context.size());
+                    folderName = new StringBuilder();
+                    for(int index = 0; index < folderNamePieceList.size(); index++){
+                        folderName.append(folderNamePieceList.get(index));
+                        if(index < context.size()-1)
+                            folderName.append(" ");
+                    }
+                    folderNamePieceList.clear();
+                    context.add(folderName.toString());
+                    workingDirectory = dropboxService.forwardToSpecificFolder(userId, folderName.toString());
+                } else {
+                    String folderName = context.get(2);
+                    workingDirectory = dropboxService.forwardToSpecificFolder(userId, folderName);
+                }
+
+                return new TextMessage(
+                        workingDirectory.isPresent() ? ("Current working directory: " + workingDirectory.get()) : "Couldn't find directory."
+                );
+
             }
         },
         BACK {
             @Override
             public Message makeReplyMessage(List<String> context) throws Exception {
-                return null;
+                DropboxServiceImpl dropboxService = (DropboxServiceImpl) oauth2Service;
+                String userId = context.get(0);
+                Optional<String> workingDirectory = dropboxService.backToPreviousFolder(userId);
+                String workingDirectoryAfterProcess = "";
+                if(workingDirectory.isPresent())
+                    workingDirectoryAfterProcess = workingDirectory.get().equals("") ? "\"(home)\"" : workingDirectory.get();
+                return new TextMessage(
+                        workingDirectory.isPresent() ? ("Current working directory: " + workingDirectoryAfterProcess): "Unexpected Error."
+                );
             }
         },
         DL{
