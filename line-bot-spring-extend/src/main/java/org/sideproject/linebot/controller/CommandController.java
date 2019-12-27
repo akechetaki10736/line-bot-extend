@@ -58,12 +58,14 @@ public class CommandController {
     }
 
     private Optional<Message> makeReplyMessage(String command, String userId) throws Exception {
-        CommandAction.CommandEnum commandEnum = CommandAction.CommandEnum.UNKNOWN_COMMAND;
 
+        CommandAction.CommandEnum commandEnum =CommandAction.CommandEnum.UNKNOWN_COMMAND;
+
+        // 0:userId, 1:command, 2: command parameter
         List<String> contextArr = new ArrayList<>();
         contextArr.addAll(Arrays.asList(command.split(" ")));
         contextArr.add(0, userId);
-
+        
         if(command.startsWith("!") && CommandAction.commandMap.containsKey(contextArr.get(1)))
             commandEnum = CommandAction.commandMap.get(contextArr.get(1));
 

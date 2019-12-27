@@ -93,20 +93,20 @@ public class DropboxServiceImpl implements Oauth2Service{
     }
 
     public Optional<List<String>> getFilesList(String userId) throws DbxException {
-        List<String> ret = null;
-        if(this.dpxClientMap.get(userId) == null) {
+        List<String> results = null;
+        if(!this.dpxClientMap.containsKey(userId)) {
             log.error("User({}) has not yet logged in.", userId);
             return Optional.empty();
         }
 
-        ret = new ArrayList<String>(3);
+        results = new ArrayList<String>(3);
         DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
 
         StringBuilder fileListBuilder = new StringBuilder(), folderListBuilder = new StringBuilder();
-        ListFolderResult result = dpxClient.files().listFolder(dpxUserPWD.get(userId));
-        ret.add(0, dpxUserPWD.get(userId));
+        ListFolderResult resultList = dpxClient.files().listFolder(dpxUserPWD.get(userId));
+        results.add(0, dpxUserPWD.get(userId));
         while(true) {
-            for (Metadata metadata : result.getEntries()) {
+            for (Metadata metadata : resultList.getEntries()) {
                 String mtName = metadata.getName();
                 if (metadata instanceof FolderMetadata) {
                     //folder here
@@ -117,13 +117,47 @@ public class DropboxServiceImpl implements Oauth2Service{
                     fileListBuilder.append(String.format("file : %s\n", mtName));
                 }
             }
-            if(!result.getHasMore())
+            if(!resultList.getHasMore())
                 break;
-            result = dpxClient.files().listFolderContinue(result.getCursor());
+            resultList = dpxClient.files().listFolderContinue(resultList.getCursor());
         }
-        ret.add(1, folderListBuilder.toString());
-        ret.add(2, fileListBuilder.toString());
-        return Optional.of(ret);
+        results.add(1, folderListBuilder.toString());
+        results.add(2, fileListBuilder.toString());
+        return Optional.of(results);
+    }
+
+    public Optional<String> forwardToSpecificFolder(String userId, String path) {
+        if(!this.dpxClientMap.containsKey(userId)) {
+            log.error("User({}) has not yet logged in.", userId);
+            return Optional.empty();
+        }
+        DbxClientV2 dbxClient = dpxClientMap.get(userId);
+        String currentPath = this.dpxUserPWD.get(userId);
+        String targetPath = currentPath + "/" +path;
+        try {
+            dbxClient.files().listFolder(targetPath);
+        } catch (DbxException e) {
+            log.error("Folder({}) doesn't exist.", path);
+            return  Optional.empty();
+        }
+
+        String newWorkingDirectory = targetPath;
+        this.dpxUserPWD.put(userId, newWorkingDirectory);
+
+        return Optional.of(newWorkingDirectory);
+    }
+
+    public Optional<String> backToPreviousFolder(String userId) throws DbxException{
+        if(!this.dpxClientMap.containsKey(userId)) {
+            log.error("User({}) has not yet logged in.", userId);
+            return Optional.empty();
+        }
+        DbxClientV2 dbxClient = dpxClientMap.get(userId);
+        String path = dpxUserPWD.get(userId);
+        String pathOfPreviousFolder = path.equals("") ? "" : path.substring(0, path.lastIndexOf('/'));
+        dbxClient.files().listFolder(pathOfPreviousFolder);
+        dpxUserPWD.put(userId, pathOfPreviousFolder);
+        return Optional.of(pathOfPreviousFolder);
     }
 
     public Optional<String> getFileLink(String userId, String file) {
