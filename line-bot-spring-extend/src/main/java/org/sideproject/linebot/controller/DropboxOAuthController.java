@@ -1,9 +1,9 @@
 package org.sideproject.linebot.controller;
 
-import org.sideproject.linebot.service.Oauth2Service;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.PushMessage;
 import com.linecorp.bot.model.message.TextMessage;
+import org.sideproject.linebot.service.Oauth2Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;

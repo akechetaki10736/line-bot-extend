@@ -1,9 +1,9 @@
 package org.sideproject.linebot.service;
+
 import com.dropbox.core.*;
+import com.dropbox.core.util.IOUtil;
 import com.dropbox.core.v2.DbxClientV2;
-import com.dropbox.core.v2.files.FolderMetadata;
-import com.dropbox.core.v2.files.ListFolderResult;
-import com.dropbox.core.v2.files.Metadata;
+import com.dropbox.core.v2.files.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +13,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
+import java.io.InputStream;
 import java.util.*;
 
 
@@ -184,5 +185,31 @@ public class DropboxServiceImpl implements Oauth2Service{
             return Optional.empty();
 
         return Optional.of(result);
+    }
+
+    public void uploadImageSteam(String userId, InputStream stream, long fileSize) throws Exception {
+        if(!this.dpxClientMap.containsKey(userId) || !this.dpxUserPWD.containsKey(userId)) {
+            log.error("User might not login yet");
+            return;
+        }
+
+        DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
+
+        IOUtil.ProgressListener progressListener = new IOUtil.ProgressListener() {
+            @Override
+            public void onProgress(long bytesWritten) {
+                log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)\n", bytesWritten, fileSize, 100 * (bytesWritten / (double) fileSize)));
+            }
+        };
+
+        StringBuilder dropboxPath = new StringBuilder();
+        dropboxPath.append("/LineSpace/");
+        dropboxPath.append(UUID.randomUUID().toString() + ".jpg");
+
+        FileMetadata metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
+                .withMode(WriteMode.ADD)
+                .uploadAndFinish(stream, progressListener);
+
+        log.info("Finished uploading file :\n {}", metadata.toStringMultiline());
     }
 }

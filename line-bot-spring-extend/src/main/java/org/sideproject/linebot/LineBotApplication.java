@@ -21,26 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.linecorp.bot.spring.boot.annotation.LineMessageHandler;
-
 @SpringBootApplication
-@LineMessageHandler
 public class LineBotApplication {
 
     private final Logger log = LoggerFactory.getLogger(LineBotApplication.class);
     public static void main(String[] args) {
         SpringApplication.run(LineBotApplication.class, args);
     }
-
-//    @EventMapping
-//    public Message handleTextMessageEvent(MessageEvent<TextMessageContent> event) {
-//        log.info("event: " + event);
-//        final String originalMessageText = event.getMessage().getText();
-//        return new TextMessage(originalMessageText);
-//    }
-//
-//    @EventMapping
-//    public void handleDefaultMessageEvent(Event event) {
-//        System.out.println("event: " + event);
-//    }
 }
