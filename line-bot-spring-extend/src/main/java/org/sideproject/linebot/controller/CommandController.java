@@ -58,7 +58,7 @@ public class CommandController {
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
                         return;
                     }
-                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
+                    this.reply(event.getReplyToken(), new TextMessage("Uploading this image to Dropbox."));
                 });
     }
 
@@ -75,7 +75,7 @@ public class CommandController {
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
                         return;
                     }
-                    this.reply(event.getReplyToken(), new TextMessage("Upload this audio to your dropbox successfully."));
+                    this.reply(event.getReplyToken(), new TextMessage("Uploading this audio to your dropbox."));
                 });
     }
 
@@ -92,7 +92,7 @@ public class CommandController {
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
                         return;
                     }
-                    this.reply(event.getReplyToken(), new TextMessage("Upload this video to your dropbox successfully."));
+                    this.reply(event.getReplyToken(), new TextMessage("Uploading this video to your dropbox."));
                 });
     }
 
