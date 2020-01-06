@@ -190,7 +190,8 @@ public class DropboxServiceImpl implements Oauth2Service{
         return Optional.of(result);
     }
 
-    public void uploadImageSteam(String userId, InputStream stream, long fileSize) throws Exception {
+
+    public void uploadFileStream(String userId, InputStream inputStream, long fileSize, String absolutePath) throws Exception{
         if(!this.dpxClientMap.containsKey(userId) || !this.dpxUserPWD.containsKey(userId)) {
             log.error("User might not login yet");
             throw new IllegalAccessException("Please login to your dropbox first!");
@@ -206,64 +207,11 @@ public class DropboxServiceImpl implements Oauth2Service{
         };
 
         StringBuilder dropboxPath = new StringBuilder();
-        dropboxPath.append("/LineSpace/Picture");
-        dropboxPath.append(UUID.randomUUID().toString() + ".jpg");
+        dropboxPath.append(absolutePath);
 
         FileMetadata metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
                 .withMode(WriteMode.ADD)
-                .uploadAndFinish(stream, progressListener);
-
-        log.info("Finished uploading file :\n {}", metadata.toStringMultiline());
-    }
-
-    public void uploadAudioSteam(String userId, InputStream stream, long fileSize) throws Exception {
-        if(!this.dpxClientMap.containsKey(userId) || !this.dpxUserPWD.containsKey(userId)) {
-            log.error("User might not login yet");
-            throw new IllegalAccessException("Please login to your dropbox first!");
-        }
-
-        DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
-
-        IOUtil.ProgressListener progressListener = new IOUtil.ProgressListener() {
-            @Override
-            public void onProgress(long bytesWritten) {
-                log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)\n", bytesWritten, fileSize, 100 * (bytesWritten / (double) fileSize)));
-            }
-        };
-
-        StringBuilder dropboxPath = new StringBuilder();
-        dropboxPath.append("/LineSpace/Audio");
-        dropboxPath.append(UUID.randomUUID().toString() + ".mp4");
-
-        FileMetadata metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
-                .withMode(WriteMode.ADD)
-                .uploadAndFinish(stream, progressListener);
-
-        log.info("Finished uploading file :\n {}", metadata.toStringMultiline());
-    }
-
-    public void uploadVideoSteam(String userId, InputStream stream, long fileSize) throws Exception {
-        if(!this.dpxClientMap.containsKey(userId) || !this.dpxUserPWD.containsKey(userId)) {
-            log.error("User might not login yet");
-            throw new IllegalAccessException("Please login to your dropbox first!");
-        }
-
-        DbxClientV2 dpxClient = this.dpxClientMap.get(userId);
-
-        IOUtil.ProgressListener progressListener = new IOUtil.ProgressListener() {
-            @Override
-            public void onProgress(long bytesWritten) {
-                log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)\n", bytesWritten, fileSize, 100 * (bytesWritten / (double) fileSize)));
-            }
-        };
-
-        StringBuilder dropboxPath = new StringBuilder();
-        dropboxPath.append("/LineSpace/Video");
-        dropboxPath.append(UUID.randomUUID().toString() + ".mp4");
-
-        FileMetadata metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
-                .withMode(WriteMode.ADD)
-                .uploadAndFinish(stream, progressListener);
+                .uploadAndFinish(inputStream, progressListener);
 
         log.info("Finished uploading file :\n {}", metadata.toStringMultiline());
     }

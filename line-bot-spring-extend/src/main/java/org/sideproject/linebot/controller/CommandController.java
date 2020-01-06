@@ -34,9 +34,9 @@ public class CommandController {
     private Map<String, String> userCache = new HashMap<>();
 
     @Autowired
-    public CommandController(LineMessagingClient lineMessagingClient, DropboxServiceImpl dpxServiceimpl) {
+    public CommandController(LineMessagingClient lineMessagingClient, DropboxServiceImpl dpxServiceImpl) {
         this.lineMessagingClient = lineMessagingClient;
-        this.dpxServiceImpl = dpxServiceimpl;
+        this.dpxServiceImpl = dpxServiceImpl;
     }
 
     @EventMapping
@@ -52,7 +52,7 @@ public class CommandController {
                 event.getMessage().getId(),
                 ImageContent -> {
                     try {
-                            dpxServiceImpl.uploadImageSteam(event.getSource().getUserId(), ImageContent.getStream(), ImageContent.getLength());
+                            dpxServiceImpl.uploadFileStream(event.getSource().getUserId(), ImageContent.getStream(), ImageContent.getLength(), "/LineSpace/Picture/" + UUID.randomUUID().toString() +".jpg");
                     } catch (Exception e) {
                         log.error(e.getMessage());
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
@@ -69,13 +69,13 @@ public class CommandController {
                 event.getMessage().getId(),
                 AudioContent -> {
                     try {
-                        dpxServiceImpl.uploadAudioSteam(event.getSource().getUserId(), AudioContent.getStream(), AudioContent.getLength());
+                        dpxServiceImpl.uploadFileStream(event.getSource().getUserId(), AudioContent.getStream(), AudioContent.getLength(), "/LineSpace/Audio/" + UUID.randomUUID().toString() +".mp4");
                     } catch (Exception e) {
                         log.error(e.getMessage());
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
                         return;
                     }
-                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
+                    this.reply(event.getReplyToken(), new TextMessage("Upload this audio to your dropbox successfully."));
                 });
     }
 
@@ -86,13 +86,13 @@ public class CommandController {
                 event.getMessage().getId(),
                 VideoContent -> {
                     try {
-                        dpxServiceImpl.uploadVideoSteam(event.getSource().getUserId(), VideoContent.getStream(), VideoContent.getLength());
+                        dpxServiceImpl.uploadFileStream(event.getSource().getUserId(), VideoContent.getStream(), VideoContent.getLength(), "/LineSpace/Video/" + UUID.randomUUID().toString() +".mp4");
                     } catch (Exception e) {
                         log.error(e.getMessage());
                         this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
                         return;
                     }
-                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
+                    this.reply(event.getReplyToken(), new TextMessage("Upload this video to your dropbox successfully."));
                 });
     }
 
