@@ -46,7 +46,7 @@ public class CommandController {
     }
 
     @EventMapping
-    public void handleImageMessageContent(MessageEvent<ImageMessageContent> event) throws Exception {
+    public void handleImageMessageContent(MessageEvent<ImageMessageContent> event) {
         handleMultiMediaContent (
                 event.getReplyToken(),
                 event.getMessage().getId(),
@@ -55,23 +55,50 @@ public class CommandController {
                             dpxServiceImpl.uploadImageSteam(event.getSource().getUserId(), ImageContent.getStream(), ImageContent.getLength());
                     } catch (Exception e) {
                         log.error(e.getMessage());
+                        this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
+                        return;
                     }
+                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
                 });
     }
 
     @EventMapping
-    public void handleAudioMessageContent(MessageEvent<AudioMessageContent> event) throws Exception{
-        /* TODO */
+    public void handleAudioMessageContent(MessageEvent<AudioMessageContent> event) {
+        handleMultiMediaContent (
+                event.getReplyToken(),
+                event.getMessage().getId(),
+                AudioContent -> {
+                    try {
+                        dpxServiceImpl.uploadAudioSteam(event.getSource().getUserId(), AudioContent.getStream(), AudioContent.getLength());
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
+                        return;
+                    }
+                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
+                });
     }
 
     @EventMapping
-    public void handleVideoMessageContent(MessageEvent<VideoMessageContent> event) throws Exception{
-        /* TODO */
+    public void handleVideoMessageContent(MessageEvent<VideoMessageContent> event) {
+        handleMultiMediaContent (
+                event.getReplyToken(),
+                event.getMessage().getId(),
+                VideoContent -> {
+                    try {
+                        dpxServiceImpl.uploadVideoSteam(event.getSource().getUserId(), VideoContent.getStream(), VideoContent.getLength());
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
+                        return;
+                    }
+                    this.reply(event.getReplyToken(), new TextMessage("Upload this image to your dropbox successfully."));
+                });
     }
 
     @EventMapping
-    public void handleFileMessageContent(MessageEvent<FileMessageContent> event) throws Exception{
-        /* TODO */
+    public void handleFileMessageContent(MessageEvent<FileMessageContent> event) {
+            /*TODO*/
     }
 
     private void reply(@NonNull String replyToken, @NonNull Message message) {
