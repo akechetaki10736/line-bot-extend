@@ -244,13 +244,16 @@ public class DropboxServiceImpl implements Oauth2Service{
         @Override
         public void run() {
 
+
             FileMetadata metadata = null;
             try {
                 if(fileSize < CHUNKED_UPLOAD_CHUNK_SIZE) {
                     // no need to upload in chunks
                     metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
                             .withMode(WriteMode.ADD)
-                            .uploadAndFinish(inputStream, this);
+                            .uploadAndFinish(inputStream, (long bytesWritten) -> {
+                                log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)", bytesWritten, fileSize,  100 * ((bytesWritten) / (double) fileSize)));
+                            });
                 } else {
                     log.info("This file with {} bytes is larger than {} Mib. Using chunk file upload.", fileSize, chunkSize);
                     String sessionId = null;
