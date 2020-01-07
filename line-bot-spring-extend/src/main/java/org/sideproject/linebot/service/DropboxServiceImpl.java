@@ -7,6 +7,7 @@ import com.dropbox.core.v2.files.*;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.PushMessage;
 import com.linecorp.bot.model.message.TextMessage;
+import org.apache.commons.io.input.CountingInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -234,7 +234,7 @@ public class DropboxServiceImpl implements Oauth2Service{
 
         @Override
         public void onProgress(long bytesWritten) {
-            log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)", uploadedSize + bytesWritten, fileSize, 100 * (uploadedSize + bytesWritten / (double) fileSize)));
+            log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)", uploadedSize + bytesWritten, fileSize, 100 * ( (uploadedSize + bytesWritten) / (double) fileSize)));
         }
 
         private void updateCurrentUploadedSize(long bytes) {
@@ -243,8 +243,6 @@ public class DropboxServiceImpl implements Oauth2Service{
 
         @Override
         public void run() {
-
-
             FileMetadata metadata = null;
             try {
                 if(fileSize < CHUNKED_UPLOAD_CHUNK_SIZE) {
@@ -258,14 +256,15 @@ public class DropboxServiceImpl implements Oauth2Service{
                     log.info("This file with {} bytes is larger than {} Mib. Using chunk file upload.", fileSize, chunkSize);
                     String sessionId = null;
                     long uploaded = 0L;
-
-
+                    CountingInputStream countingInputStream = new CountingInputStream(inputStream);
                     for (int i = 0; i < CHUNKED_UPLOAD_MAX_ATTEMPTS; ++i) {
                         try {
+                            countingInputStream.resetByteCount();
+                            countingInputStream.skip(uploaded);
                             // Phase 1: Start
                             if (sessionId == null) {
                                 sessionId = dpxClient.files().uploadSessionStart()
-                                        .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this)
+                                        .uploadAndFinish(countingInputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this)
                                         .getSessionId();
                                 uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
                                 updateCurrentUploadedSize(uploaded);
@@ -276,7 +275,7 @@ public class DropboxServiceImpl implements Oauth2Service{
                             // Phase 2: Append
                             while ((fileSize - uploaded) > CHUNKED_UPLOAD_CHUNK_SIZE) {
                                 dpxClient.files().uploadSessionAppendV2(cursor)
-                                        .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this);
+                                        .uploadAndFinish(countingInputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this);
                                 uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
                                 updateCurrentUploadedSize(uploaded);
                                 cursor = new UploadSessionCursor(sessionId, uploaded);
@@ -288,7 +287,7 @@ public class DropboxServiceImpl implements Oauth2Service{
                                     .withMode(WriteMode.ADD)
                                     .build();
                             metadata = dpxClient.files().uploadSessionFinish(cursor, commitInfo)
-                                    .uploadAndFinish(inputStream, remaining, this);
+                                    .uploadAndFinish(countingInputStream, remaining, this);
                         } catch (RetryException ex) {
                             log.warn("Retrying upload process in {} seconds...", ex.getBackoffMillis() / 1000);
                             Thread.sleep(ex.getBackoffMillis());
@@ -299,6 +298,18 @@ public class DropboxServiceImpl implements Oauth2Service{
                         } catch (UploadSessionLookupErrorException ex) {
                             log.error("server offset({}) into the stream doesn't match our offset ({}).", ex.errorValue.getIncorrectOffsetValue().getCorrectOffset(), uploaded);
                             throw ex;
+                        } catch (UploadSessionFinishErrorException ex) {
+                            if (ex.errorValue.isLookupFailed() && ex.errorValue.getLookupFailedValue().isIncorrectOffset()) {
+                                // server offset into the stream doesn't match our offset (uploaded). Seek to
+                                // the expected offset according to the server and try again.
+                                uploaded = ex.errorValue
+                                        .getLookupFailedValue()
+                                        .getIncorrectOffsetValue()
+                                        .getCorrectOffset();
+                                continue;
+                            }
+                             else
+                                throw ex;
                         }
                     }
                 }
