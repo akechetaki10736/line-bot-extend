@@ -216,12 +216,13 @@ public class DropboxServiceImpl implements Oauth2Service{
     }
 
 
-    private class UploadThreadPoolRunnable implements Runnable{
+    private class UploadThreadPoolRunnable implements Runnable, IOUtil.ProgressListener {
         private String userId;
         private DbxClientV2 dpxClient;
         private InputStream inputStream;
         private String dropboxPath;
         private long fileSize;
+        private long uploadedSize = 0;
 
         public UploadThreadPoolRunnable(String userId, DbxClientV2 dpxClient, InputStream inputStream, String dropboxPath, long fileSize) {
             this.userId = userId;
@@ -230,61 +231,78 @@ public class DropboxServiceImpl implements Oauth2Service{
             this.dropboxPath = dropboxPath;
             this.fileSize = fileSize;
         }
+
+        @Override
+        public void onProgress(long bytesWritten) {
+            log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)", uploadedSize + bytesWritten, fileSize, 100 * (uploadedSize + bytesWritten / (double) fileSize)));
+        }
+
+        private void updateCurrentUploadedSize(long bytes) {
+            uploadedSize = bytes;
+        }
+
         @Override
         public void run() {
-            IOUtil.ProgressListener progressListener = new IOUtil.ProgressListener() {
-                long uploadedSize = 0;
-                @Override
-                public void onProgress(long bytesWritten) {
-                    uploadedSize += bytesWritten;
-                    log.info(String.format("Uploaded %12d / %12d bytes (%5.2f%%)\n", uploadedSize, fileSize, 100 * (uploadedSize / (double) fileSize)));
-                }
-            };
+
             FileMetadata metadata = null;
             try {
-
                 if(fileSize < CHUNKED_UPLOAD_CHUNK_SIZE) {
                     // no need to upload in chunks
                     metadata = dpxClient.files().uploadBuilder(dropboxPath.toString())
                             .withMode(WriteMode.ADD)
-                            .uploadAndFinish(inputStream, progressListener);
+                            .uploadAndFinish(inputStream, this);
                 } else {
                     log.info("This file with {} bytes is larger than {} Mib. Using chunk file upload.", fileSize, chunkSize);
                     String sessionId = null;
                     long uploaded = 0L;
+
+
                     for (int i = 0; i < CHUNKED_UPLOAD_MAX_ATTEMPTS; ++i) {
+                        try {
+                            // Phase 1: Start
+                            if (sessionId == null) {
+                                sessionId = dpxClient.files().uploadSessionStart()
+                                        .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this)
+                                        .getSessionId();
+                                uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
+                                updateCurrentUploadedSize(uploaded);
+                            }
 
-                        // Phase 1: Start
-                        if(sessionId == null) {
-                            sessionId = dpxClient.files().uploadSessionStart()
-                                    .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, progressListener)
-                                    .getSessionId();
-                            uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
+                            UploadSessionCursor cursor = new UploadSessionCursor(sessionId, uploaded);
+
+                            // Phase 2: Append
+                            while ((fileSize - uploaded) > CHUNKED_UPLOAD_CHUNK_SIZE) {
+                                dpxClient.files().uploadSessionAppendV2(cursor)
+                                        .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, this);
+                                uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
+                                updateCurrentUploadedSize(uploaded);
+                                cursor = new UploadSessionCursor(sessionId, uploaded);
+                            }
+
+                            // Phase 3: Finish
+                            long remaining = fileSize - uploaded;
+                            CommitInfo commitInfo = CommitInfo.newBuilder(dropboxPath.toString())
+                                    .withMode(WriteMode.ADD)
+                                    .build();
+                            metadata = dpxClient.files().uploadSessionFinish(cursor, commitInfo)
+                                    .uploadAndFinish(inputStream, remaining, this);
+                        } catch (RetryException ex) {
+                            log.warn("Retrying upload process in {} seconds...", ex.getBackoffMillis() / 1000);
+                            Thread.sleep(ex.getBackoffMillis());
+                            continue;
+                        } catch (NetworkIOException ex) {
+                            log.warn("Network error({}) occurred.", ex.getMessage());
+                            continue;
+                        } catch (UploadSessionLookupErrorException ex) {
+                            log.error("server offset({}) into the stream doesn't match our offset ({}).", ex.errorValue.getIncorrectOffsetValue().getCorrectOffset(), uploaded);
+                            throw ex;
                         }
-
-                        UploadSessionCursor cursor = new UploadSessionCursor(sessionId, uploaded);
-
-                        // Phase 2: Append
-                        while ((fileSize - uploaded) > CHUNKED_UPLOAD_CHUNK_SIZE) {
-                            dpxClient.files().uploadSessionAppendV2(cursor)
-                                    .uploadAndFinish(inputStream, CHUNKED_UPLOAD_CHUNK_SIZE, progressListener);
-                            uploaded += CHUNKED_UPLOAD_CHUNK_SIZE;
-                            cursor = new UploadSessionCursor(sessionId, uploaded);
-                        }
-
-                        // Phase 3: Finish
-                        long remaining = fileSize - uploaded;
-                        CommitInfo commitInfo = CommitInfo.newBuilder(dropboxPath.toString())
-                                .withMode(WriteMode.ADD)
-                                .build();
-                        metadata = dpxClient.files().uploadSessionFinish(cursor, commitInfo)
-                                .uploadAndFinish(inputStream, remaining, progressListener);
                     }
                 }
 
             } catch (Exception e) {
                 lineMessagingClient.pushMessage(new PushMessage(
-                        userId, new TextMessage("Upload file failed.")
+                        userId, new TextMessage(String.format("Upload file failed. Message=%s",e.getMessage()))
                 ));
                  return;
             }
