@@ -98,7 +98,19 @@ public class CommandController {
 
     @EventMapping
     public void handleFileMessageContent(MessageEvent<FileMessageContent> event) {
-            /*TODO*/
+        handleMultiMediaContent (
+                event.getReplyToken(),
+                event.getMessage().getId(),
+                FileMessageContent -> {
+                    try {
+                        dpxServiceImpl.uploadFileStream(event.getSource().getUserId(), FileMessageContent.getStream(), FileMessageContent.getLength(), "/LineSpace/File/" + event.getMessage().getFileName());
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        this.reply(event.getReplyToken(), new TextMessage(e.getMessage()));
+                        return;
+                    }
+                    this.reply(event.getReplyToken(), new TextMessage("Uploading this video to your dropbox."));
+                });
     }
 
     private void reply(@NonNull String replyToken, @NonNull Message message) {
