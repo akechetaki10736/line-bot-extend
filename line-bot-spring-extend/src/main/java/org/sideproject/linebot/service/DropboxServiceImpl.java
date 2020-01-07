@@ -297,6 +297,10 @@ public class DropboxServiceImpl implements Oauth2Service{
                             continue;
                         } catch (UploadSessionLookupErrorException ex) {
                             log.error("server offset({}) into the stream doesn't match our offset ({}).", ex.errorValue.getIncorrectOffsetValue().getCorrectOffset(), uploaded);
+                            if(ex.errorValue.isIncorrectOffset()) {
+                                    uploaded = ex.errorValue.getIncorrectOffsetValue().getCorrectOffset();
+                                    continue;
+                            }
                             throw ex;
                         } catch (UploadSessionFinishErrorException ex) {
                             if (ex.errorValue.isLookupFailed() && ex.errorValue.getLookupFailedValue().isIncorrectOffset()) {
@@ -308,8 +312,7 @@ public class DropboxServiceImpl implements Oauth2Service{
                                         .getCorrectOffset();
                                 continue;
                             }
-                             else
-                                throw ex;
+                            throw ex;
                         }
                     }
                 }
