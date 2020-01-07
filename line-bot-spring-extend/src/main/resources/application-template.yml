@@ -21,6 +21,12 @@ line.bot:
   channel-secret: 'Put Your Channel Secret Here.'
   handler.path: /callback
 
+dropbox.config:
+  app-key: 'dropbox app key'
+  app-secret: 'dropbox app secret'
+  redirect-uri: 'dropbox webhook api https://xxx.xxx.xx/oauth2callback'
+  # chunk size in long. Quantity : MiB
+  chunk-size: 4
 # To remove Client wire logs. Please comment out following lines.
 # See: https://docs.spring.io/spring-boot/docs/current/reference/html/howto-logging.html
 #
